@@ -5,13 +5,21 @@ export const locales = {
     loginSubtitle: "¿Nuevo en Pigmentara?",
     loginCreateAccount: "Crear una cuenta",
     loginOr: "O",
-    loginEmail: "Correo electrónico",
-    loginPassword: "Contraseña",
+    loginUserLabel: "Usuario",
+    loginPasswordLabel: "Contraseña",
     loginForgotPassword: "¿Olvidaste tu contraseña?",
     loginButtonAction: "Ingresar",
-    loginOrg: "Ingresar con email de organización",
     loginFormError: "Por favor, ingresa tu correo y contraseña.",
 
+    // Create Account
+    createAccountTitle: "Crear Nueva Cuenta",
+    createAccountSubtitle: "Funcionalidad en desarrollo. ¡Vuelve pronto!",
+    backToLogin: "Volver a Iniciar Sesión",
+
+    // Forgot Password
+    forgotPasswordTitle: "Recuperar Contraseña",
+    forgotPasswordSubtitle: "Funcionalidad en desarrollo. ¡Vuelve pronto!",
+    
     // Home
     homeTitle: "Comenzar una Nueva Paleta",
     homeDescription: "Apunta tu cámara a cualquier escena para capturar sus colores. Nuestra IA analizará la imagen y extraerá una hermosa paleta de colores para ti.",
@@ -70,6 +78,9 @@ export const locales = {
     alertPalettesDeleted: "Todas tus paletas han sido borradas.",
     confirmDeleteAccount: "¡ADVERTENCIA FINAL! ¿Estás seguro de que quieres borrar tu cuenta y todas tus paletas? Esta acción no se puede deshacer.",
 
+    // Footer
+    footerText: "Un desarrollo de",
+    footerAuthor: "Nicolás Colombero",
 
     // Gemini Service
     pigmentError: "Error procesando color",
@@ -82,12 +93,20 @@ export const locales = {
     loginSubtitle: "New to Pigmentara?",
     loginCreateAccount: "Create an account",
     loginOr: "OR",
-    loginEmail: "Email address",
-    loginPassword: "Password",
+    loginUserLabel: "User",
+    loginPasswordLabel: "Password",
     loginForgotPassword: "Forgot your password?",
     loginButtonAction: "Log in",
-    loginOrg: "Log in with your organization's email",
     loginFormError: "Please enter your email and password.",
+
+    // Create Account
+    createAccountTitle: "Create New Account",
+    createAccountSubtitle: "Functionality in development. Check back soon!",
+    backToLogin: "Back to Login",
+
+    // Forgot Password
+    forgotPasswordTitle: "Recover Password",
+    forgotPasswordSubtitle: "Functionality in development. Check back soon!",
     
     // Home
     homeTitle: "Start a New Palette",
@@ -146,6 +165,10 @@ export const locales = {
     confirmDeleteAllPalettes: "WARNING! Are you sure you want to delete ALL of your palettes? This action cannot be undone.",
     alertPalettesDeleted: "All your palettes have been deleted.",
     confirmDeleteAccount: "FINAL WARNING! Are you sure you want to delete your account and all your data? This action cannot be undone.",
+
+    // Footer
+    footerText: "A development by",
+    footerAuthor: "Nicolás Colombero",
 
     // Gemini Service
     pigmentError: "Error processing color",

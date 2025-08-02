@@ -29,6 +29,8 @@ export interface Palette {
 
 export enum AppView {
   LOGIN,
+  CREATE_ACCOUNT,
+  FORGOT_PASSWORD,
   HOME,
   CAMERA,
   RESULTS,

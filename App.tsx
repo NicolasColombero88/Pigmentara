@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppView } from './types';
 import type { ColorSwatch, Palette, TranslatedColor, Language } from './types';
 import { translateColorToPigments } from './services/geminiService';
-import { CameraIcon, PaletteIcon, BackIcon, SaveIcon, PlusIcon, GoogleIcon, PigmentaraLogoIcon, EyeIcon, EyeOffIcon, GitHubIcon, UserCircleIcon, LogoutIcon, SettingsIcon, TrashIcon } from './components/icons';
+import { CameraIcon, PaletteIcon, BackIcon, SaveIcon, PlusIcon, GoogleIcon, PigmentaraLogoIcon, EyeIcon, EyeOffIcon, UserCircleIcon, LogoutIcon, SettingsIcon, TrashIcon } from './components/icons';
 import { ColorSwatch as ColorSwatchComponent } from './components/ColorSwatch';
 import { locales } from './locales';
 
@@ -20,7 +20,7 @@ const rgbToHex = (r: number, g: number, b: number): string => {
 
 // --- Sub-Components defined outside App to prevent re-renders ---
 
-const LoginScreen = ({ onLogin, t }: { onLogin: () => void, t: typeof locales.es }) => {
+const LoginScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t: typeof locales.es }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +29,7 @@ const LoginScreen = ({ onLogin, t }: { onLogin: () => void, t: typeof locales.es
         e.preventDefault();
         // Basic validation for demo purposes
         if (email && password) {
-            onLogin();
+            onNavigate(AppView.HOME);
         } else {
             alert(t.loginFormError);
         }
@@ -42,14 +42,14 @@ const LoginScreen = ({ onLogin, t }: { onLogin: () => void, t: typeof locales.es
                     <h1 className="text-3xl font-bold text-white">{t.loginTitle}</h1>
                     <p className="mt-2 text-sm text-neutral-400">
                         {t.loginSubtitle}{' '}
-                        <a href="#" className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                        <button onClick={() => onNavigate(AppView.CREATE_ACCOUNT)} className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
                            {t.loginCreateAccount}
-                        </a>
+                        </button>
                     </p>
                 </div>
 
                 <div className="flex justify-center">
-                    <button onClick={onLogin} className="w-full max-w-xs inline-flex justify-center items-center gap-3 py-2.5 px-4 border border-slate-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors">
+                    <button onClick={() => onNavigate(AppView.HOME)} className="w-full max-w-xs inline-flex justify-center items-center gap-3 py-2.5 px-4 border border-slate-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors">
                        <GoogleIcon className="w-5 h-5"/>
                        <span>Google</span>
                     </button>
@@ -63,41 +63,63 @@ const LoginScreen = ({ onLogin, t }: { onLogin: () => void, t: typeof locales.es
 
                 <form className="space-y-4" onSubmit={handleFormSubmit}>
                     <div>
-                        <label htmlFor="email" className="sr-only">{t.loginEmail}</label>
+                        <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-1">{t.loginUserLabel}</label>
                         <input id="email" name="email" type="email" autoComplete="email" required 
                          value={email}
                          onChange={(e) => setEmail(e.target.value)}
                          className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
                     </div>
-                    <div className="relative">
-                        <label htmlFor="password" className="sr-only">{t.loginPassword}</label>
-                        <input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required 
-                         value={password}
-                         onChange={(e) => setPassword(e.target.value)}
-                         className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white">
-                           {showPassword ? <EyeOffIcon className="h-5 w-5"/> : <EyeIcon className="h-5 w-5"/>}
-                        </button>
+                    <div className="space-y-1">
+                        <label htmlFor="password" className="block text-sm font-medium text-neutral-300">{t.loginPasswordLabel}</label>
+                        <div className="relative">
+                           <input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
+                           <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white">
+                              {showPassword ? <EyeOffIcon className="h-5 w-5"/> : <EyeIcon className="h-5 w-5"/>}
+                           </button>
+                        </div>
                     </div>
                      <div className="text-right text-sm">
-                        <a href="#" className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                        <button onClick={() => onNavigate(AppView.FORGOT_PASSWORD)} type="button" className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
                             {t.loginForgotPassword}
-                        </a>
+                        </button>
                     </div>
 
                     <button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 transition-all transform hover:scale-105">
                         {t.loginButtonAction}
                     </button>
                 </form>
-                 <div className="text-center">
-                    <a href="#" className="text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors">
-                        {t.loginOrg}
-                    </a>
-                </div>
             </div>
         </div>
     );
 }
+
+const CreateAccountScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t: typeof locales.es }) => (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+        <div className="w-full max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
+            <h1 className="text-3xl font-bold text-white">{t.createAccountTitle}</h1>
+            <p className="text-neutral-400">{t.createAccountSubtitle}</p>
+            <button onClick={() => onNavigate(AppView.LOGIN)} className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                {t.backToLogin}
+            </button>
+        </div>
+    </div>
+);
+
+const ForgotPasswordScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t: typeof locales.es }) => (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+        <div className="w-full max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
+            <h1 className="text-3xl font-bold text-white">{t.forgotPasswordTitle}</h1>
+            <p className="text-neutral-400">{t.forgotPasswordSubtitle}</p>
+            <button onClick={() => onNavigate(AppView.LOGIN)} className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                {t.backToLogin}
+            </button>
+        </div>
+    </div>
+);
+
 
 const HomeScreen = ({ onOpenCamera, t }: { onOpenCamera: () => void, t: typeof locales.es }) => (
   <div className="flex flex-col items-center justify-center h-full p-8 text-center">
@@ -487,6 +509,17 @@ const UserMenu = ({ onLogout, onNavigate, t }: {
     );
 }
 
+const Footer = ({ t }: { t: typeof locales.es }) => (
+    <footer className="w-full py-4 text-center text-xs text-neutral-500">
+        <span>
+            {t.footerText}{' '}
+            <a href="http://www.nicolascolombero.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-orange-400/80 hover:text-orange-400 hover:underline">
+                {t.footerAuthor}
+            </a> - 2025
+        </span>
+    </footer>
+);
+
 const App = () => {
   const [view, setView] = useState<AppView>(AppView.LOGIN);
   const [language, setLanguage] = useState<Language>('es');
@@ -508,7 +541,6 @@ const App = () => {
       localStorage.setItem('pigment_palettes', JSON.stringify(updatedPalettes));
   }
 
-  const handleLogin = () => setView(AppView.HOME);
   const handleLogout = () => {
       if(window.confirm(t.confirmLogout)) {
         setView(AppView.LOGIN);
@@ -603,7 +635,11 @@ const App = () => {
   const renderContent = () => {
     switch (view) {
       case AppView.LOGIN:
-        return <LoginScreen onLogin={handleLogin} t={t}/>;
+        return <LoginScreen onNavigate={setView} t={t}/>;
+      case AppView.CREATE_ACCOUNT:
+        return <CreateAccountScreen onNavigate={setView} t={t}/>;
+      case AppView.FORGOT_PASSWORD:
+        return <ForgotPasswordScreen onNavigate={setView} t={t}/>;
       case AppView.HOME:
         return <HomeScreen onOpenCamera={() => setView(AppView.CAMERA)} t={t}/>;
       case AppView.CAMERA:
@@ -618,11 +654,11 @@ const App = () => {
       case AppView.SETTINGS:
           return <SettingsView onDeleteAllPalettes={handleDeleteAllPalettes} onDeleteAccount={handleDeleteAccount} t={t}/>;
       default:
-        return <LoginScreen onLogin={handleLogin} t={t}/>;
+        return <LoginScreen onNavigate={setView} t={t}/>;
     }
   };
   
-  const showNav = view !== AppView.LOGIN && view !== AppView.CAMERA;
+  const showNav = view !== AppView.LOGIN && view !== AppView.CAMERA && view !== AppView.CREATE_ACCOUNT && view !== AppView.FORGOT_PASSWORD;
 
   return (
     <div className="min-h-screen w-full flex flex-col">
@@ -656,6 +692,7 @@ const App = () => {
         <main className="flex-grow">
             {renderContent()}
         </main>
+        <Footer t={t} />
     </div>
   );
 };
