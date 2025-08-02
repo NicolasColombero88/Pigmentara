@@ -33,6 +33,7 @@ export enum AppView {
   CAMERA,
   RESULTS,
   PALETTES,
+  SETTINGS,
 }
 
 export type Language = 'en' | 'es';

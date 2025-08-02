@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppView } from './types';
 import type { ColorSwatch, Palette, TranslatedColor, Language } from './types';
 import { translateColorToPigments } from './services/geminiService';
-import { CameraIcon, PaletteIcon, BackIcon, SaveIcon, PlusIcon, GoogleIcon, PigmentaraLogoIcon } from './components/icons';
+import { CameraIcon, PaletteIcon, BackIcon, SaveIcon, PlusIcon, GoogleIcon, PigmentaraLogoIcon, EyeIcon, EyeOffIcon, GitHubIcon, UserCircleIcon, LogoutIcon, SettingsIcon, TrashIcon } from './components/icons';
 import { ColorSwatch as ColorSwatchComponent } from './components/ColorSwatch';
 import { locales } from './locales';
 
@@ -20,25 +20,84 @@ const rgbToHex = (r: number, g: number, b: number): string => {
 
 // --- Sub-Components defined outside App to prevent re-renders ---
 
-const LoginScreen = ({ onLogin, t }: { onLogin: () => void, t: typeof locales.es }) => (
-  <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-    <div className="max-w-md w-full">
-      <PigmentaraLogoIcon className="w-28 h-28 mx-auto" style={{filter: 'drop-shadow(0 0 1.5rem #f9731655)'}}/>
-      <h1 className="text-5xl font-semibold text-white mt-6">{t.loginTitle}</h1>
-      <p className="text-lg text-neutral-300 mt-4 mb-10 font-sans">
-        {t.loginDescription}
-      </p>
-      <button
-        onClick={onLogin}
-        className="w-full bg-neutral-100 text-slate-800 font-semibold py-3 px-6 rounded-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-white/20 transition-all duration-300 transform hover:scale-105"
-      >
-        <GoogleIcon className="w-6 h-6" />
-        {t.loginButton}
-      </button>
-       <p className="text-xs text-neutral-500 mt-6 font-sans"> {t.loginDisclaimer} </p>
-    </div>
-  </div>
-);
+const LoginScreen = ({ onLogin, t }: { onLogin: () => void, t: typeof locales.es }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        // Basic validation for demo purposes
+        if (email && password) {
+            onLogin();
+        } else {
+            alert(t.loginFormError);
+        }
+    };
+    
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="w-full max-w-sm sm:max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
+                <div>
+                    <h1 className="text-3xl font-bold text-white">{t.loginTitle}</h1>
+                    <p className="mt-2 text-sm text-neutral-400">
+                        {t.loginSubtitle}{' '}
+                        <a href="#" className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                           {t.loginCreateAccount}
+                        </a>
+                    </p>
+                </div>
+
+                <div className="flex justify-center">
+                    <button onClick={onLogin} className="w-full max-w-xs inline-flex justify-center items-center gap-3 py-2.5 px-4 border border-slate-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors">
+                       <GoogleIcon className="w-5 h-5"/>
+                       <span>Google</span>
+                    </button>
+                </div>
+
+                <div className="flex items-center">
+                    <hr className="w-full border-slate-600"/>
+                    <span className="px-2 text-xs text-neutral-500 font-semibold">{t.loginOr}</span>
+                    <hr className="w-full border-slate-600"/>
+                </div>
+
+                <form className="space-y-4" onSubmit={handleFormSubmit}>
+                    <div>
+                        <label htmlFor="email" className="sr-only">{t.loginEmail}</label>
+                        <input id="email" name="email" type="email" autoComplete="email" required 
+                         value={email}
+                         onChange={(e) => setEmail(e.target.value)}
+                         className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
+                    </div>
+                    <div className="relative">
+                        <label htmlFor="password" className="sr-only">{t.loginPassword}</label>
+                        <input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required 
+                         value={password}
+                         onChange={(e) => setPassword(e.target.value)}
+                         className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white">
+                           {showPassword ? <EyeOffIcon className="h-5 w-5"/> : <EyeIcon className="h-5 w-5"/>}
+                        </button>
+                    </div>
+                     <div className="text-right text-sm">
+                        <a href="#" className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                            {t.loginForgotPassword}
+                        </a>
+                    </div>
+
+                    <button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 transition-all transform hover:scale-105">
+                        {t.loginButtonAction}
+                    </button>
+                </form>
+                 <div className="text-center">
+                    <a href="#" className="text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                        {t.loginOrg}
+                    </a>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 const HomeScreen = ({ onOpenCamera, t }: { onOpenCamera: () => void, t: typeof locales.es }) => (
   <div className="flex flex-col items-center justify-center h-full p-8 text-center">
@@ -326,6 +385,107 @@ const PalettesView = ({ palettes, onAddNew, onDeletePalette, t }: {
     </div>
 );
 
+const SettingsView = ({ onDeleteAllPalettes, onDeleteAccount, t }: {
+    onDeleteAllPalettes: () => void;
+    onDeleteAccount: () => void;
+    t: typeof locales.es;
+}) => (
+    <div className="p-4 md:p-6 max-w-3xl mx-auto text-white">
+        <h2 className="text-4xl font-semibold mb-8">{t.settingsTitle}</h2>
+        
+        <div className="space-y-8">
+            {/* Edit Profile Card */}
+            <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-xl shadow-2xl p-6">
+                <h3 className="text-2xl font-semibold mb-4">{t.settingsProfile}</h3>
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-sm font-medium text-neutral-400">{t.settingsName}</label>
+                        <input type="text" defaultValue="Demo User" disabled className="mt-1 block w-full bg-slate-800 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white sm:text-sm cursor-not-allowed"/>
+                    </div>
+                    <button disabled className="font-semibold py-2 px-4 rounded-lg bg-slate-600 text-neutral-400 cursor-not-allowed">{t.settingsSave}</button>
+                </div>
+            </div>
+
+            {/* Change Password Card */}
+            <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-xl shadow-2xl p-6">
+                <h3 className="text-2xl font-semibold mb-4">{t.settingsChangePassword}</h3>
+                <div className="space-y-4">
+                     <div>
+                        <label className="text-sm font-medium text-neutral-400">{t.settingsCurrentPassword}</label>
+                        <input type="password" disabled className="mt-1 block w-full bg-slate-800 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white sm:text-sm cursor-not-allowed"/>
+                    </div>
+                     <div>
+                        <label className="text-sm font-medium text-neutral-400">{t.settingsNewPassword}</label>
+                        <input type="password" disabled className="mt-1 block w-full bg-slate-800 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white sm:text-sm cursor-not-allowed"/>
+                    </div>
+                    <button disabled className="font-semibold py-2 px-4 rounded-lg bg-slate-600 text-neutral-400 cursor-not-allowed">{t.settingsUpdatePassword}</button>
+                </div>
+            </div>
+
+            {/* Danger Zone Card */}
+            <div className="bg-slate-900/50 backdrop-blur-md border border-red-500/50 rounded-xl shadow-2xl p-6">
+                 <h3 className="text-2xl font-semibold text-red-400 mb-2">{t.settingsDangerZone}</h3>
+                 <p className="text-neutral-400 mb-6 text-sm">{t.settingsDangerZoneDesc}</p>
+                 <div className="flex flex-col sm:flex-row gap-4">
+                     <button onClick={onDeleteAllPalettes} className="font-semibold py-2 px-4 rounded-lg bg-red-800/60 text-red-300 hover:bg-red-800/90 border border-red-600/80 transition-colors flex items-center justify-center gap-2">
+                        <TrashIcon className="w-5 h-5"/> {t.settingsDeletePalettes}
+                     </button>
+                      <button onClick={onDeleteAccount} className="font-semibold py-2 px-4 rounded-lg bg-red-900 text-red-300 hover:bg-red-800 border border-red-600 transition-colors flex items-center justify-center gap-2">
+                         <TrashIcon className="w-5 h-5"/> {t.settingsDeleteAccount}
+                      </button>
+                 </div>
+            </div>
+        </div>
+    </div>
+);
+
+const UserMenu = ({ onLogout, onNavigate, t }: {
+    onLogout: () => void;
+    onNavigate: (view: AppView) => void;
+    t: typeof locales.es
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [menuRef]);
+
+    const navigateAndClose = (view: AppView) => {
+        onNavigate(view);
+        setIsOpen(false);
+    };
+
+    return (
+        <div ref={menuRef} className="relative">
+            <button onClick={() => setIsOpen(!isOpen)} className="w-10 h-10 rounded-full bg-slate-700/80 text-white flex items-center justify-center hover:bg-slate-600/80 transition-colors">
+                <UserCircleIcon className="w-7 h-7" />
+            </button>
+            {isOpen && (
+                 <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-30 border border-slate-700">
+                    <div className="py-1" role="menu" aria-orientation="vertical" aria-labelledby="menu-button">
+                        <a href="#" onClick={() => navigateAndClose(AppView.PALETTES)} className="text-neutral-200 hover:bg-slate-700/70 hover:text-white group flex items-center gap-3 px-4 py-2 text-sm" role="menuitem">
+                           <PaletteIcon className="w-5 h-5"/> {t.navMyPalettes}
+                        </a>
+                         <a href="#" onClick={() => navigateAndClose(AppView.SETTINGS)} className="text-neutral-200 hover:bg-slate-700/70 hover:text-white group flex items-center gap-3 px-4 py-2 text-sm" role="menuitem">
+                           <SettingsIcon className="w-5 h-5"/> {t.settingsTitle}
+                        </a>
+                        <div className="border-t border-slate-700 my-1"></div>
+                        <a href="#" onClick={onLogout} className="text-red-400 hover:bg-red-500/20 hover:text-red-300 group flex items-center gap-3 px-4 py-2 text-sm" role="menuitem">
+                           <LogoutIcon className="w-5 h-5"/> {t.logout}
+                        </a>
+                    </div>
+                 </div>
+            )}
+        </div>
+    );
+}
 
 const App = () => {
   const [view, setView] = useState<AppView>(AppView.LOGIN);
@@ -349,6 +509,11 @@ const App = () => {
   }
 
   const handleLogin = () => setView(AppView.HOME);
+  const handleLogout = () => {
+      if(window.confirm(t.confirmLogout)) {
+        setView(AppView.LOGIN);
+      }
+  };
 
   const handleCapture = useCallback((dataUrl: string) => {
     setCapturedImage(dataUrl);
@@ -421,6 +586,20 @@ const App = () => {
       }
   };
 
+  const handleDeleteAllPalettes = () => {
+    if(window.confirm(t.confirmDeleteAllPalettes)) {
+        savePalettesToLocal([]);
+        alert(t.alertPalettesDeleted)
+    }
+  }
+
+  const handleDeleteAccount = () => {
+    if(window.confirm(t.confirmDeleteAccount)) {
+        savePalettesToLocal([]);
+        setView(AppView.LOGIN);
+    }
+  }
+
   const renderContent = () => {
     switch (view) {
       case AppView.LOGIN:
@@ -436,6 +615,8 @@ const App = () => {
         return null;
       case AppView.PALETTES:
           return <PalettesView palettes={palettes} onSelectPalette={()=>{}} onAddNew={() => setView(AppView.HOME)} onDeletePalette={handleDeletePalette} t={t}/>;
+      case AppView.SETTINGS:
+          return <SettingsView onDeleteAllPalettes={handleDeleteAllPalettes} onDeleteAccount={handleDeleteAccount} t={t}/>;
       default:
         return <LoginScreen onLogin={handleLogin} t={t}/>;
     }
@@ -450,12 +631,22 @@ const App = () => {
                 <nav className="flex justify-between items-center p-4 max-w-7xl mx-auto">
                     <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView(AppView.HOME)}>
                         <PigmentaraLogoIcon className="w-10 h-10"/>
-                        <span className="text-2xl font-semibold text-white">Pigmentara</span>
+                        <span className="text-xl sm:text-2xl font-semibold text-white">Pigmentara</span>
                     </div>
-                    <div className="flex items-center gap-6">
-                        <button onClick={() => setView(AppView.HOME)} className={`font-semibold transition-colors ${view === AppView.HOME ? 'text-orange-400' : 'text-neutral-300 hover:text-white'}`}>{t.navCapture}</button>
-                        <button onClick={() => setView(AppView.PALETTES)} className={`font-semibold transition-colors ${view === AppView.PALETTES ? 'text-orange-400' : 'text-neutral-300 hover:text-white'}`}>{t.navMyPalettes}</button>
-                        <button onClick={() => setLanguage(lang => lang === 'es' ? 'en' : 'es')} className="text-sm font-bold bg-slate-700/80 hover:bg-slate-600/80 text-white py-1.5 px-3 w-14 rounded-md transition-colors">
+                    <div className="flex items-center gap-2 sm:gap-4">
+                        <button
+                            onClick={() => setView(AppView.HOME)}
+                            className={`flex items-center gap-2 p-2 rounded-lg font-semibold transition-colors ${view === AppView.HOME ? 'text-orange-400 bg-orange-500/10' : 'text-neutral-300 hover:text-white hover:bg-slate-700/50'}`}
+                            aria-label={t.navCapture}
+                        >
+                            <CameraIcon className="w-6 h-6"/>
+                            <span className="hidden sm:inline">{t.navCapture}</span>
+                        </button>
+                        <UserMenu onLogout={handleLogout} onNavigate={setView} t={t} />
+                        <button
+                            onClick={() => setLanguage(lang => lang === 'es' ? 'en' : 'es')}
+                            className="text-sm font-bold bg-slate-700/80 hover:bg-slate-600/80 text-white py-2 px-3 w-12 text-center rounded-lg transition-colors"
+                        >
                             {language === 'es' ? 'EN' : 'ES'}
                         </button>
                     </div>
