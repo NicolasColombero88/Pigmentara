@@ -1,0 +1,8 @@
+{
+  "name": "Pigmentara",
+  "description": "Pigmentara is an application to capture real-world colors using your camera and translate them into paint formulas for both acrylic and oil paints using AI.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "prompt": ""
+}
