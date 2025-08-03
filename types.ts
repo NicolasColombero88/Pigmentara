@@ -31,6 +31,7 @@ export enum AppView {
   LOGIN,
   CREATE_ACCOUNT,
   FORGOT_PASSWORD,
+  RESET_PASSWORD,
   HOME,
   CAMERA,
   RESULTS,

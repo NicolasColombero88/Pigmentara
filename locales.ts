@@ -2,7 +2,7 @@ export const locales = {
   es: {
     // Login
     loginTitle: "Iniciar Sesión",
-    loginSubtitle: "¿Nuevo en Pigmentara?",
+    loginSubtitle: "¿Nuevo en PigmentarApp?",
     loginCreateAccount: "Crear una cuenta",
     loginOr: "O",
     loginUserLabel: "Usuario",
@@ -26,8 +26,23 @@ export const locales = {
 
     // Forgot Password
     forgotPasswordTitle: "Recuperar Contraseña",
-    forgotPasswordSubtitle: "Funcionalidad en desarrollo. ¡Vuelve pronto!",
+    forgotPasswordSubtitle: "Ingresa tu correo electrónico y te enviaremos un código para restablecer tu contraseña.",
+    forgotPasswordEmailLabel: "Correo Electrónico",
+    forgotPasswordSendCode: "Enviar Código",
+    alertCodeSent: (email: string) => `Se ha enviado un código a ${email}. Para fines de esta demostración, el código es: 123456`,
     
+    // Reset Password
+    resetPasswordTitle: "Restablecer Contraseña",
+    resetPasswordSubtitle: "Revisa tu correo, ingresa el código de recuperación y elige una nueva contraseña.",
+    resetPasswordCodeLabel: "Código de Recuperación",
+    resetPasswordNewPasswordLabel: "Nueva Contraseña",
+    resetPasswordConfirmNewPasswordLabel: "Confirmar Nueva Contraseña",
+    resetPasswordButtonAction: "Cambiar Contraseña",
+    alertPasswordMismatch: "Las nuevas contraseñas no coinciden.",
+    alertInvalidCode: "El código de recuperación es incorrecto.",
+    alertPasswordResetSuccess: "¡Contraseña actualizada con éxito! Ahora puedes iniciar sesión.",
+    resetPasswordFormError: "Por favor, completa todos los campos.",
+
     // Home
     homeTitle: "Comenzar una Nueva Paleta",
     homeDescription: "Apunta tu cámara a cualquier escena para capturar sus colores. Nuestra IA analizará la imagen y extraerá una hermosa paleta de colores para ti.",
@@ -97,7 +112,7 @@ export const locales = {
   en: {
     // Login
     loginTitle: "Log in",
-    loginSubtitle: "New to Pigmentara?",
+    loginSubtitle: "New to PigmentarApp?",
     loginCreateAccount: "Create an account",
     loginOr: "OR",
     loginUserLabel: "User",
@@ -121,8 +136,23 @@ export const locales = {
 
     // Forgot Password
     forgotPasswordTitle: "Recover Password",
-    forgotPasswordSubtitle: "Functionality in development. Check back soon!",
+    forgotPasswordSubtitle: "Enter your email and we'll send you a code to reset your password.",
+    forgotPasswordEmailLabel: "Email",
+    forgotPasswordSendCode: "Send Code",
+    alertCodeSent: (email: string) => `A code has been sent to ${email}. For the purpose of this demo, the code is: 123456`,
     
+    // Reset Password
+    resetPasswordTitle: "Reset Password",
+    resetPasswordSubtitle: "Check your email, enter the recovery code, and choose a new password.",
+    resetPasswordCodeLabel: "Recovery Code",
+    resetPasswordNewPasswordLabel: "New Password",
+    resetPasswordConfirmNewPasswordLabel: "Confirm New Password",
+    resetPasswordButtonAction: "Change Password",
+    alertPasswordMismatch: "The new passwords do not match.",
+    alertInvalidCode: "The recovery code is incorrect.",
+    alertPasswordResetSuccess: "Password successfully updated! You can now log in.",
+    resetPasswordFormError: "Please fill out all fields.",
+
     // Home
     homeTitle: "Start a New Palette",
     homeDescription: "Point your camera at any scene to capture its colors. Our AI will analyze the image and extract a beautiful color palette for you.",

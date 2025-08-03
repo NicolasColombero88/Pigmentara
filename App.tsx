@@ -1,8 +1,10 @@
+
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppView } from './types';
 import type { ColorSwatch, Palette, TranslatedColor, Language } from './types';
 import { translateColorToPigments } from './services/geminiService';
-import { CameraIcon, PaletteIcon, BackIcon, SaveIcon, PlusIcon, GoogleIcon, PigmentaraLogoIcon, EyeIcon, EyeOffIcon, UserCircleIcon, LogoutIcon, SettingsIcon, TrashIcon } from './components/icons';
+import { CameraIcon, PaletteIcon, BackIcon, SaveIcon, PlusIcon, GoogleIcon, PigmentarAppLogoIcon, EyeIcon, EyeOffIcon, UserCircleIcon, LogoutIcon, SettingsIcon, TrashIcon } from './components/icons';
 import { ColorSwatch as ColorSwatchComponent } from './components/ColorSwatch';
 import { locales } from './locales';
 
@@ -172,17 +174,129 @@ const CreateAccountScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) =>
     );
 };
 
-const ForgotPasswordScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t: typeof locales.es }) => (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-        <div className="w-full max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
-            <h1 className="text-3xl font-bold text-white">{t.forgotPasswordTitle}</h1>
-            <p className="text-neutral-400">{t.forgotPasswordSubtitle}</p>
-            <button onClick={() => onNavigate(AppView.LOGIN)} className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
-                {t.backToLogin}
-            </button>
+const ForgotPasswordScreen = ({ onNavigate, onSendCode, t }: { onNavigate: (view: AppView) => void, onSendCode: (email: string) => void, t: typeof locales.es }) => {
+    const [email, setEmail] = useState('');
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (email) {
+            onSendCode(email);
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="w-full max-w-sm sm:max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
+                <div>
+                    <h1 className="text-3xl font-bold text-white">{t.forgotPasswordTitle}</h1>
+                    <p className="mt-2 text-sm text-neutral-400">
+                        {t.forgotPasswordSubtitle}
+                    </p>
+                </div>
+                <form className="space-y-6" onSubmit={handleSubmit}>
+                    <div>
+                        <label htmlFor="email-forgot" className="block text-sm font-medium text-neutral-300 mb-1">{t.forgotPasswordEmailLabel}</label>
+                        <input id="email-forgot" name="email" type="email" autoComplete="email" required
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm" />
+                    </div>
+                    <button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 transition-all transform hover:scale-105">
+                        {t.forgotPasswordSendCode}
+                    </button>
+                </form>
+                <div className="text-center text-sm">
+                    <button onClick={() => onNavigate(AppView.LOGIN)} className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                        {t.backToLogin}
+                    </button>
+                </div>
+            </div>
         </div>
-    </div>
-);
+    );
+};
+
+const ResetPasswordScreen = ({ onPasswordReset, onBack, t }: { onPasswordReset: () => void, onBack: () => void, t: typeof locales.es }) => {
+    const [code, setCode] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const DEMO_CODE = "123456";
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!code || !newPassword || !confirmPassword) {
+            alert(t.resetPasswordFormError);
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            alert(t.alertPasswordMismatch);
+            return;
+        }
+        if (code !== DEMO_CODE) {
+            alert(t.alertInvalidCode);
+            return;
+        }
+        alert(t.alertPasswordResetSuccess);
+        onPasswordReset();
+    };
+
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="w-full max-w-sm sm:max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
+                <div>
+                    <h1 className="text-3xl font-bold text-white">{t.resetPasswordTitle}</h1>
+                    <p className="mt-2 text-sm text-neutral-400">{t.resetPasswordSubtitle}</p>
+                </div>
+
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                    <div>
+                        <label htmlFor="recovery-code" className="block text-sm font-medium text-neutral-300 mb-1">{t.resetPasswordCodeLabel}</label>
+                        <input id="recovery-code" name="recovery-code" type="text" required
+                            value={code}
+                            onChange={(e) => setCode(e.target.value)}
+                            className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm" />
+                    </div>
+                    <div className="space-y-1">
+                        <label htmlFor="new-password" className="block text-sm font-medium text-neutral-300">{t.resetPasswordNewPasswordLabel}</label>
+                        <div className="relative">
+                            <input id="new-password" name="new-password" type={showPassword ? "text" : "password"} required
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm" />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white">
+                                {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                            </button>
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <label htmlFor="confirm-new-password" className="block text-sm font-medium text-neutral-300">{t.resetPasswordConfirmNewPasswordLabel}</label>
+                        <div className="relative">
+                            <input id="confirm-new-password" name="confirm-new-password" type={showConfirmPassword ? "text" : "password"} required
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm" />
+                            <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white">
+                                {showConfirmPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 transition-all transform hover:scale-105">
+                        {t.resetPasswordButtonAction}
+                    </button>
+                </form>
+
+                 <div className="text-center text-sm">
+                    <button onClick={onBack} className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                        {t.backToLogin}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 
 const HomeScreen = ({ onOpenCamera, t }: { onOpenCamera: () => void, t: typeof locales.es }) => (
@@ -609,6 +723,13 @@ const App = () => {
       }
   };
 
+  const handleRequestPasswordReset = (email: string) => {
+    // In a real app, an API call would be made here to send a code.
+    // For this demo, we'll just show an alert with a hardcoded code.
+    alert(t.alertCodeSent(email));
+    setView(AppView.RESET_PASSWORD);
+  };
+
   const handleCapture = useCallback((dataUrl: string) => {
     setCapturedImage(dataUrl);
     const img = new Image();
@@ -701,7 +822,9 @@ const App = () => {
       case AppView.CREATE_ACCOUNT:
         return <CreateAccountScreen onNavigate={setView} t={t}/>;
       case AppView.FORGOT_PASSWORD:
-        return <ForgotPasswordScreen onNavigate={setView} t={t}/>;
+        return <ForgotPasswordScreen onNavigate={setView} onSendCode={handleRequestPasswordReset} t={t}/>;
+      case AppView.RESET_PASSWORD:
+        return <ResetPasswordScreen onPasswordReset={() => setView(AppView.LOGIN)} onBack={() => setView(AppView.LOGIN)} t={t} />;
       case AppView.HOME:
         return <HomeScreen onOpenCamera={() => setView(AppView.CAMERA)} t={t}/>;
       case AppView.CAMERA:
@@ -720,7 +843,7 @@ const App = () => {
     }
   };
   
-  const showNav = view !== AppView.LOGIN && view !== AppView.CAMERA && view !== AppView.CREATE_ACCOUNT && view !== AppView.FORGOT_PASSWORD;
+  const showNav = view !== AppView.LOGIN && view !== AppView.CAMERA && view !== AppView.CREATE_ACCOUNT && view !== AppView.FORGOT_PASSWORD && view !== AppView.RESET_PASSWORD;
 
   return (
     <div className="min-h-screen w-full flex flex-col">
@@ -728,8 +851,8 @@ const App = () => {
             <header className="bg-slate-900/60 backdrop-blur-lg sticky top-0 z-20 shadow-md border-b border-slate-700/50">
                 <nav className="flex justify-between items-center p-4 max-w-7xl mx-auto">
                     <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView(AppView.HOME)}>
-                        <PigmentaraLogoIcon className="w-10 h-10"/>
-                        <span className="text-xl sm:text-2xl font-semibold text-white">Pigmentara</span>
+                        <PigmentarAppLogoIcon className="w-10 h-10"/>
+                        <span className="text-xl sm:text-2xl font-semibold text-white">PigmentarApp</span>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4">
                         <button
