@@ -96,17 +96,81 @@ const LoginScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t
     );
 }
 
-const CreateAccountScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t: typeof locales.es }) => (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-        <div className="w-full max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
-            <h1 className="text-3xl font-bold text-white">{t.createAccountTitle}</h1>
-            <p className="text-neutral-400">{t.createAccountSubtitle}</p>
-            <button onClick={() => onNavigate(AppView.LOGIN)} className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
-                {t.backToLogin}
-            </button>
+const CreateAccountScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t: typeof locales.es }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password || !confirmPassword) {
+            alert(t.createAccountFormError);
+            return;
+        }
+        if (password !== confirmPassword) {
+            alert(t.createAccountPasswordMismatch);
+            return;
+        }
+        alert(t.alertAccountCreated);
+        onNavigate(AppView.HOME);
+    };
+    
+    return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-4">
+            <div className="w-full max-w-sm sm:max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
+                <div>
+                    <h1 className="text-3xl font-bold text-white">{t.createAccountTitle}</h1>
+                    <p className="mt-2 text-sm text-neutral-400">
+                        {t.createAccountSubtitle}{' '}
+                        <button onClick={() => onNavigate(AppView.LOGIN)} className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
+                           {t.createAccountLoginLink}
+                        </button>
+                    </p>
+                </div>
+
+                <form className="space-y-4" onSubmit={handleFormSubmit}>
+                    <div>
+                        <label htmlFor="email-create" className="block text-sm font-medium text-neutral-300 mb-1">{t.createAccountEmailLabel}</label>
+                        <input id="email-create" name="email" type="email" autoComplete="email" required 
+                         value={email}
+                         onChange={(e) => setEmail(e.target.value)}
+                         className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
+                    </div>
+                    <div className="space-y-1">
+                        <label htmlFor="password-create" className="block text-sm font-medium text-neutral-300">{t.createAccountPasswordLabel}</label>
+                        <div className="relative">
+                           <input id="password-create" name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required 
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
+                           <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white">
+                              {showPassword ? <EyeOffIcon className="h-5 w-5"/> : <EyeIcon className="h-5 w-5"/>}
+                           </button>
+                        </div>
+                    </div>
+                     <div className="space-y-1">
+                        <label htmlFor="confirm-password" className="block text-sm font-medium text-neutral-300">{t.createAccountConfirmPasswordLabel}</label>
+                        <div className="relative">
+                           <input id="confirm-password" name="confirm-password" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" required 
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
+                           <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white">
+                              {showConfirmPassword ? <EyeOffIcon className="h-5 w-5"/> : <EyeIcon className="h-5 w-5"/>}
+                           </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 transition-all transform hover:scale-105">
+                        {t.createAccountButtonAction}
+                    </button>
+                </form>
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const ForgotPasswordScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t: typeof locales.es }) => (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
@@ -267,19 +331,17 @@ const ResultsView = ({
                 <div className="w-10 h-10 rounded-full border-2 border-slate-600" style={{backgroundColor: formula.sourceColor.hex}}></div>
                 <h3 className="text-lg font-bold font-mono text-white tracking-wider">{formula.sourceColor.hex.toUpperCase()}</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <h4 className="font-semibold text-lg text-amber-300 mb-2">{t.acrylicFormula}</h4>
-                    <ul className="text-sm text-neutral-300 space-y-1.5">
-                        {formula.formula.acrylic.map((p, i) => <li key={i}><span className="text-amber-500 mr-2">•</span>{p.name}: {p.proportion}%</li>)}
-                    </ul>
-                </div>
-                <div>
-                    <h4 className="font-semibold text-lg text-orange-300 mb-2">{t.oilFormula}</h4>
-                    <ul className="text-sm text-neutral-300 space-y-1.5">
-                        {formula.formula.oil.map((p, i) => <li key={i}><span className="text-orange-500 mr-2">•</span>{p.name}: {p.proportion}%</li>)}
-                    </ul>
-                </div>
+            <div>
+                <h4 className="font-semibold text-lg text-amber-300 mb-3">{t.paintsToUse}</h4>
+                <ul className="text-sm text-neutral-200 space-y-2.5">
+                    {formula.formula.pigments.map((p, i) => (
+                        <li key={i} className="flex items-center gap-3">
+                            <div className="w-5 h-5 rounded-md border border-slate-500/50 shadow-inner" style={{backgroundColor: p.hex}}></div>
+                            <span className="flex-grow text-neutral-300">{p.name}</span>
+                            <span className="font-semibold text-white">{p.proportion}%</span>
+                        </li>
+                    ))}
+                </ul>
             </div>
         </div>
     );

@@ -10,45 +10,27 @@ if (!process.env.API_KEY) {
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const responseSchema = {
-  type: Type.OBJECT,
-  properties: {
-    acrylic: {
-      type: Type.ARRAY,
-      description: "A list of acrylic paint pigments and their proportions.",
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          name: { type: Type.STRING, description: "Name of the acrylic paint pigment." },
-          proportion: { type: Type.NUMBER, description: "Percentage of this pigment in the mix." },
-        },
-        required: ["name", "proportion"],
-      },
+  type: Type.ARRAY,
+  description: "A list of paint pigments, their proportions, and their corresponding hex color codes.",
+  items: {
+    type: Type.OBJECT,
+    properties: {
+      name: { type: Type.STRING, description: "Name of the paint pigment." },
+      proportion: { type: Type.NUMBER, description: "Percentage of this pigment in the mix." },
+      hex: { type: Type.STRING, description: "The hex color code of the pure pigment (e.g., '#FF0000' for a red pigment)." }
     },
-    oil: {
-      type: Type.ARRAY,
-      description: "A list of oil paint pigments and their proportions.",
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          name: { type: Type.STRING, description: "Name of the oil paint pigment." },
-          proportion: { type: Type.NUMBER, description: "Percentage of this pigment in the mix." },
-        },
-        required: ["name", "proportion"],
-      },
-    },
+    required: ["name", "proportion", "hex"],
   },
-  required: ["acrylic", "oil"],
 };
 
 export const translateColorToPigments = async (color: ColorSwatch, language: Language): Promise<PaintFormula> => {
   const t = locales[language];
-  const prompt = `You are an expert art supplier and paint mixer. Your task is to provide a mixing formula to create a specific color using common artist's paints.
+  const prompt = `You are an expert art supplier and paint mixer. Your task is to provide a single mixing formula to create a specific color using common artist's paints.
 The target color is HEX: ${color.hex} (RGB: ${color.r}, ${color.g}, ${color.b}).
 
-The response must be a JSON object containing two properties: 'acrylic' and 'oil'.
-Each property should be an array of pigment objects.
-Each pigment object must have a 'name' (string) and a 'proportion' (number).
-The proportions for the pigments within each array (acrylic and oil) must sum to 100.
+The response must be a JSON array of pigment objects.
+Each pigment object must have a 'name' (string), a 'proportion' (number), and a 'hex' (string representing the pigment's own color, which must be a valid hex code).
+The proportions for the pigments in the array must sum to 100.
 ${t.geminiLanguageInstruction}`;
 
   try {
@@ -63,22 +45,17 @@ ${t.geminiLanguageInstruction}`;
     });
 
     const jsonText = response.text.trim();
-    const parsedFormula = JSON.parse(jsonText);
+    const parsedPigments = JSON.parse(jsonText);
     
-    if (
-      !parsedFormula ||
-      !Array.isArray(parsedFormula.acrylic) ||
-      !Array.isArray(parsedFormula.oil)
-    ) {
-      throw new Error("Invalid formula structure received from API.");
+    if (!Array.isArray(parsedPigments)) {
+      throw new Error("Invalid formula structure received from API. Expected an array.");
     }
 
-    return parsedFormula as PaintFormula;
+    return { pigments: parsedPigments } as PaintFormula;
   } catch (error) {
     console.error(t.geminiErrorLog, error);
     return {
-      acrylic: [{ name: t.pigmentError, proportion: 100 }],
-      oil: [{ name: t.pigmentError, proportion: 100 }],
+      pigments: [{ name: t.pigmentError, proportion: 100, hex: '#888888' }],
     };
   }
 };

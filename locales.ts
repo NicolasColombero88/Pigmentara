@@ -13,7 +13,15 @@ export const locales = {
 
     // Create Account
     createAccountTitle: "Crear Nueva Cuenta",
-    createAccountSubtitle: "Funcionalidad en desarrollo. ¡Vuelve pronto!",
+    createAccountSubtitle: "¿Ya tienes una cuenta?",
+    createAccountLoginLink: "Inicia Sesión",
+    createAccountEmailLabel: "Correo Electrónico",
+    createAccountPasswordLabel: "Contraseña",
+    createAccountConfirmPasswordLabel: "Confirmar Contraseña",
+    createAccountButtonAction: "Crear Cuenta",
+    createAccountPasswordMismatch: "Las contraseñas no coinciden.",
+    createAccountFormError: "Por favor, completa todos los campos.",
+    alertAccountCreated: "¡Cuenta creada con éxito! Serás redirigido a la página principal.",
     backToLogin: "Volver a Iniciar Sesión",
 
     // Forgot Password
@@ -38,8 +46,7 @@ export const locales = {
     aiIsMixing: "El artista digital está mezclando tus pigmentos...",
     translationPlaceholder: "Selecciona colores y pulsa 'Mezclar' para ver la magia.",
     saveToPalette: "Guardar en Paleta",
-    acrylicFormula: "Fórmula Acrílica",
-    oilFormula: "Fórmula Óleo",
+    paintsToUse: "Pinturas a Utilizar",
     alertSelectColor: "Por favor, selecciona al menos un color para mezclar.",
     alertTranslateFirst: "Por favor, crea una fórmula para algunos colores antes de guardar.",
     
@@ -85,7 +92,7 @@ export const locales = {
     // Gemini Service
     pigmentError: "Error procesando color",
     geminiErrorLog: "Error al traducir color a pigmentos:",
-    geminiLanguageInstruction: "Provide a complete formula for both acrylic and oil paints using common, standard pigment names in Spanish (e.g., 'Blanco de Titanio', 'Rojo de Cadmio', 'Azul Ultramar')."
+    geminiLanguageInstruction: "Provide a single formula using common, standard pigment names in Spanish (e.g., 'Blanco de Titanio', 'Rojo de Cadmio', 'Azul Ultramar'). Include the hex color code for each pure pigment."
   },
   en: {
     // Login
@@ -101,7 +108,15 @@ export const locales = {
 
     // Create Account
     createAccountTitle: "Create New Account",
-    createAccountSubtitle: "Functionality in development. Check back soon!",
+    createAccountSubtitle: "Already have an account?",
+    createAccountLoginLink: "Log In",
+    createAccountEmailLabel: "Email",
+    createAccountPasswordLabel: "Password",
+    createAccountConfirmPasswordLabel: "Confirm Password",
+    createAccountButtonAction: "Create Account",
+    createAccountPasswordMismatch: "Passwords do not match.",
+    createAccountFormError: "Please fill out all fields.",
+    alertAccountCreated: "Account created successfully! You will be redirected to the home page.",
     backToLogin: "Back to Login",
 
     // Forgot Password
@@ -126,8 +141,7 @@ export const locales = {
     aiIsMixing: "The digital artist is mixing your pigments...",
     translationPlaceholder: "Select colors and press 'Mix' to see the magic.",
     saveToPalette: "Save to Palette",
-    acrylicFormula: "Acrylic Formula",
-    oilFormula: "Oil Formula",
+    paintsToUse: "Paints to Use",
     alertSelectColor: "Please select at least one color to mix.",
     alertTranslateFirst: "Please create a formula for some colors before saving.",
 
@@ -173,6 +187,6 @@ export const locales = {
     // Gemini Service
     pigmentError: "Error processing color",
     geminiErrorLog: "Error translating color to pigments:",
-    geminiLanguageInstruction: "Provide a complete formula for both acrylic and oil paints using common, standard pigment names in English (e.g., 'Titanium White', 'Cadmium Red', 'Ultramarine Blue')."
+    geminiLanguageInstruction: "Provide a single formula using common, standard pigment names in English (e.g., 'Titanium White', 'Cadmium Red', 'Ultramarine Blue'). Include the hex color code for each pure pigment."
   }
 };

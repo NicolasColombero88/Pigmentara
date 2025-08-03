@@ -8,11 +8,11 @@ export interface ColorSwatch {
 export interface Pigment {
   name: string;
   proportion: number;
+  hex: string;
 }
 
 export interface PaintFormula {
-  acrylic: Pigment[];
-  oil: Pigment[];
+  pigments: Pigment[];
 }
 
 export interface TranslatedColor {
