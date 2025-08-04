@@ -1,46 +1,99 @@
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AppView } from './types';
 import type { ColorSwatch, Palette, TranslatedColor, Language } from './types';
 import { translateColorToPigments } from './services/geminiService';
-import { CameraIcon, PaletteIcon, BackIcon, SaveIcon, PlusIcon, GoogleIcon, PigmentarAppLogoIcon, EyeIcon, EyeOffIcon, UserCircleIcon, LogoutIcon, SettingsIcon, TrashIcon } from './components/icons';
+import {
+  CameraIcon,
+  PaletteIcon,
+  BackIcon,
+  SaveIcon,
+  PlusIcon,
+  GoogleIcon,
+  PigmentarAppLogoIcon,
+  EyeIcon,
+  EyeOffIcon,
+  UserCircleIcon,
+  LogoutIcon,
+  SettingsIcon,
+  TrashIcon
+} from './components/icons';
 import { ColorSwatch as ColorSwatchComponent } from './components/ColorSwatch';
 import { locales } from './locales';
+import {
+  auth,
+  db,
+  signInWithEmailAndPassword,
+  googleProvider,
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  confirmPasswordReset
+} from "./firebaseClient";
+import { doc, setDoc, getDoc, getDocs, serverTimestamp, collection, addDoc, query, orderBy, onSnapshot, deleteDoc  } from "firebase/firestore";
+import {
+  sendEmailVerification,
+  updateProfile,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  updatePassword, 
+  deleteUser 
+} from 'firebase/auth';
 
-const TARGET_SWATCHES = 12;
+const TARGET_SWATCHES = 24;
 
-// --- Helper Functions ---
-const componentToHex = (c: number): string => {
-  const hex = c.toString(16);
-  return hex.length === 1 ? "0" + hex : hex;
-};
+// Helper para convertir RGB a HEX
+const componentToHex = (c: number) => c.toString(16).padStart(2, '0');
+const rgbToHex = (r: number, g: number, b: number) =>
+  `#${componentToHex(r)}${componentToHex(g)}${componentToHex(b)}`;
 
-const rgbToHex = (r: number, g: number, b: number): string => {
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
-};
+// ——— Subcomponentes de autenticación ———
 
-// --- Sub-Components defined outside App to prevent re-renders ---
+function getFirebaseAuthErrorMessage(code: string,lang: Language): string {
+  const t = locales[lang];
+  
+  switch (code) {
+    case 'auth/invalid-email':
+      return t.authInvalidEmail;
+    case 'auth/invalid-credential':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return t.authInvalidCredentials;
+    case 'auth/operation-not-allowed':
+      return t.authOperationNotAllowed;
+    case 'auth/too-many-requests':
+      return t.authTooManyRequests;
+    default:
+      return typeof t.authUnexpectedError === 'function'
+        ? t.authUnexpectedError(code)
+        : t.authUnexpectedError;
+  }
+}
 
-const LoginScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t: typeof locales.es }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
+const LoginScreen = ({ onNavigate, t, language }: {
+  onNavigate: (v: AppView) => void;
+  t: typeof locales.es;
+  language: Language;
+}) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-    const handleFormSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Basic validation for demo purposes
-        if (email && password) {
-            onNavigate(AppView.HOME);
-        } else {
-            alert(t.loginFormError);
-        }
-    };
-    
-    return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4">
-            <div className="w-full max-w-sm sm:max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
-                <div>
+   const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      onNavigate(AppView.HOME);
+    } catch (err: any) {
+      const msg = getFirebaseAuthErrorMessage(err.code, language);
+      alert(msg);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md p-8 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-lg space-y-6">
+      <PigmentarAppLogoIcon className="w-24 h-24 mx-auto" />
+                <div className="text-center">
                     <h1 className="text-3xl font-bold text-white">{t.loginTitle}</h1>
                     <p className="mt-2 text-sm text-neutral-400">
                         {t.loginSubtitle}{' '}
@@ -49,145 +102,199 @@ const LoginScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t
                         </button>
                     </p>
                 </div>
+            
+        <div className="flex justify-center">
+            <button onClick={async () => {
+                    try {
+                        const { user } = await signInWithPopup(auth, googleProvider);
+                        const userRef = doc(db, "users", user.uid);
+                        const snap = await getDoc(userRef);
+                        if (!snap.exists()) {
+                            await setDoc(userRef, {
+                            email: user.email,
+                            name: user.displayName,
+                            photoURL: user.photoURL,
+                            createdAt: serverTimestamp(),
+                            });
+                        }
+                        onNavigate(AppView.HOME);
+                        } catch (err: any) {
+                        alert(err.message);
+                        }
+                }} className="w-full max-w-xs inline-flex justify-center items-center gap-3 py-2.5 px-4 border border-slate-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors">
+                <GoogleIcon className="w-5 h-5"/>
+                <span>{t.loginWithGoogle}</span>
+            </button>
+        </div>
 
-                <div className="flex justify-center">
-                    <button onClick={() => onNavigate(AppView.HOME)} className="w-full max-w-xs inline-flex justify-center items-center gap-3 py-2.5 px-4 border border-slate-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors">
-                       <GoogleIcon className="w-5 h-5"/>
-                       <span>Google</span>
-                    </button>
-                </div>
-
-                <div className="flex items-center">
+         <div className="flex items-center">
                     <hr className="w-full border-slate-600"/>
                     <span className="px-2 text-xs text-neutral-500 font-semibold">{t.loginOr}</span>
                     <hr className="w-full border-slate-600"/>
                 </div>
 
-                <form className="space-y-4" onSubmit={handleFormSubmit}>
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-1">{t.loginUserLabel}</label>
-                        <input id="email" name="email" type="email" autoComplete="email" required 
-                         value={email}
-                         onChange={(e) => setEmail(e.target.value)}
-                         className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
-                    </div>
-                    <div className="space-y-1">
-                        <label htmlFor="password" className="block text-sm font-medium text-neutral-300">{t.loginPasswordLabel}</label>
-                        <div className="relative">
-                           <input id="password" name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" required 
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
-                           <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white">
-                              {showPassword ? <EyeOffIcon className="h-5 w-5"/> : <EyeIcon className="h-5 w-5"/>}
-                           </button>
-                        </div>
-                    </div>
-                     <div className="text-right text-sm">
-                        <button onClick={() => onNavigate(AppView.FORGOT_PASSWORD)} type="button" className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
-                            {t.loginForgotPassword}
-                        </button>
-                    </div>
-
-                    <button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 transition-all transform hover:scale-105">
-                        {t.loginButtonAction}
-                    </button>
-                </form>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm text-neutral-300">{t.loginUserLabel}</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-600 text-white focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-neutral-300">{t.loginPasswordLabel}</label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-600 text-white focus:ring-2 focus:ring-orange-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white"
+              >
+                {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+              </button>
             </div>
-        </div>
-    );
-}
-
-const CreateAccountScreen = ({ onNavigate, t }: { onNavigate: (view: AppView) => void, t: typeof locales.es }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-    const handleFormSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!email || !password || !confirmPassword) {
-            alert(t.createAccountFormError);
-            return;
-        }
-        if (password !== confirmPassword) {
-            alert(t.createAccountPasswordMismatch);
-            return;
-        }
-        alert(t.alertAccountCreated);
-        onNavigate(AppView.HOME);
-    };
-    
-    return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4">
-            <div className="w-full max-w-sm sm:max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
-                <div>
-                    <h1 className="text-3xl font-bold text-white">{t.createAccountTitle}</h1>
-                    <p className="mt-2 text-sm text-neutral-400">
-                        {t.createAccountSubtitle}{' '}
-                        <button onClick={() => onNavigate(AppView.LOGIN)} className="font-medium text-orange-400 hover:text-orange-300 transition-colors">
-                           {t.createAccountLoginLink}
-                        </button>
-                    </p>
-                </div>
-
-                <form className="space-y-4" onSubmit={handleFormSubmit}>
-                    <div>
-                        <label htmlFor="email-create" className="block text-sm font-medium text-neutral-300 mb-1">{t.createAccountEmailLabel}</label>
-                        <input id="email-create" name="email" type="email" autoComplete="email" required 
-                         value={email}
-                         onChange={(e) => setEmail(e.target.value)}
-                         className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
-                    </div>
-                    <div className="space-y-1">
-                        <label htmlFor="password-create" className="block text-sm font-medium text-neutral-300">{t.createAccountPasswordLabel}</label>
-                        <div className="relative">
-                           <input id="password-create" name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" required 
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
-                           <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white">
-                              {showPassword ? <EyeOffIcon className="h-5 w-5"/> : <EyeIcon className="h-5 w-5"/>}
-                           </button>
-                        </div>
-                    </div>
-                     <div className="space-y-1">
-                        <label htmlFor="confirm-password" className="block text-sm font-medium text-neutral-300">{t.createAccountConfirmPasswordLabel}</label>
-                        <div className="relative">
-                           <input id="confirm-password" name="confirm-password" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" required 
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="appearance-none rounded-md relative block w-full px-3 py-2.5 bg-slate-800 border border-slate-600 placeholder-neutral-500 text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 focus:border-orange-500 focus:z-10 sm:text-sm"/>
-                           <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-white">
-                              {showConfirmPassword ? <EyeOffIcon className="h-5 w-5"/> : <EyeIcon className="h-5 w-5"/>}
-                           </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-gradient-to-br from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-orange-500 transition-all transform hover:scale-105">
-                        {t.createAccountButtonAction}
-                    </button>
-                </form>
-            </div>
-        </div>
-    );
+          </div>
+          <div className="text-right">
+            <button type="button" onClick={() => onNavigate(AppView.FORGOT_PASSWORD)} className="text-sm text-orange-400 hover:text-orange-300">
+              {t.loginForgotPassword}
+            </button>
+          </div>
+          <button type="submit" className="w-full py-3 rounded-md font-bold text-white bg-gradient-to-br from-orange-500 to-red-600 hover:scale-105 transition">
+            {t.loginButtonAction}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 };
 
-const ForgotPasswordScreen = ({ onNavigate, onSendCode, t }: { onNavigate: (view: AppView) => void, onSendCode: (email: string) => void, t: typeof locales.es }) => {
+const CreateAccountScreen = ({ onNavigate, t, language }: { onNavigate: (v: AppView) => void; t: typeof locales.es; language: Language }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [showConf, setShowConf] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password || !confirm) {
+      return alert(t.createAccountFormError);
+    }
+    if (password !== confirm) {
+      return alert(t.createAccountPasswordMismatch);
+    }
+
+     try {
+    const { user } = await createUserWithEmailAndPassword(auth, email, password);
+    // Envía correo de verificación:
+    await sendEmailVerification(user, {
+      // Opcionalmente puedes personalizar la URL de retorno:
+      url: window.location.origin + '/?verified=true'
+    });
+    alert('¡Cuenta creada! Te hemos enviado un correo para verificar tu dirección.');
+    onNavigate(AppView.HOME);
+  } catch (err: any) {
+      // Localizamos cualquier error de Firebase
+      const msg = getFirebaseAuthErrorMessage(err.code, language);
+      alert(msg);
+      // si es email-in-use, puedes opcionalmente redirigir:
+      if (err.code === 'auth/email-already-in-use') {
+        onNavigate(AppView.LOGIN);
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md p-8 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-lg space-y-6">
+      <PigmentarAppLogoIcon className="w-24 h-24 mx-auto" />
+        <h1 className="text-3xl font-bold text-white">{t.createAccountTitle}</h1>
+        <p className="text-sm text-neutral-400">{t.createAccountSubtitle} <button onClick={() => onNavigate(AppView.LOGIN)} className="text-orange-400 hover:text-orange-300">{t.createAccountLoginLink}</button></p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm text-neutral-300">{t.createAccountEmailLabel}</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-600 text-white focus:ring-2 focus:ring-orange-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-neutral-300">{t.createAccountPasswordLabel}</label>
+            <div className="relative">
+              <input
+                type={showPwd ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-600 text-white focus:ring-2 focus:ring-orange-500"
+              />
+              <button type="button" onClick={() => setShowPwd(v => !v)} className="absolute inset-y-0 right-0 pr-3 text-neutral-400 hover:text-white">
+                {showPwd ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm text-neutral-300">{t.createAccountConfirmPasswordLabel}</label>
+            <div className="relative">
+              <input
+                type={showConf ? 'text' : 'password'}
+                required
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-600 text-white focus:ring-2 focus:ring-orange-500"
+              />
+              <button type="button" onClick={() => setShowConf(v => !v)} className="absolute inset-y-0 right-0 pr-3 text-neutral-400 hover:text-white">
+                {showConf ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+              </button>
+            </div>
+          </div>
+          <button type="submit" className="w-full py-3 rounded-md font-bold text-white bg-gradient-to-br from-orange-500 to-red-600 hover:scale-105 transition">
+            {t.createAccountButtonAction}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const ForgotPasswordScreen = ({ onNavigate, onSendCode, t }: { onNavigate: (view: AppView) => void; onSendCode: (email: string) => void; t: typeof locales.es }) => {
     const [email, setEmail] = useState('');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (email) {
-            onSendCode(email);
+         if (!email) {
+            alert(t.forgotPasswordFormError);
+            return;
         }
+        try {
+         await sendPasswordResetEmail(auth, email, {
+           url: window.location.origin + "/reset-password",
+           handleCodeInApp: false
+         });
+         alert(t.alertCodeSent(email));
+         onNavigate(AppView.LOGIN);
+       } catch (err: any) {
+         alert(err.message);
+       }
     };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
             <div className="w-full max-w-sm sm:max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
                 <div>
+                    <PigmentarAppLogoIcon className="w-24 h-24 mx-auto" />
                     <h1 className="text-3xl font-bold text-white">{t.forgotPasswordTitle}</h1>
                     <p className="mt-2 text-sm text-neutral-400">
                         {t.forgotPasswordSubtitle}
@@ -215,7 +322,9 @@ const ForgotPasswordScreen = ({ onNavigate, onSendCode, t }: { onNavigate: (view
     );
 };
 
-const ResetPasswordScreen = ({ onPasswordReset, onBack, t }: { onPasswordReset: () => void, onBack: () => void, t: typeof locales.es }) => {
+const ResetPasswordScreen = ({ onBack, t, onPasswordReset }) => {
+    const params = new URLSearchParams(window.location.search);
+    const oobCode = params.get("oobCode") || "";
     const [code, setCode] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -224,7 +333,7 @@ const ResetPasswordScreen = ({ onPasswordReset, onBack, t }: { onPasswordReset: 
 
     const DEMO_CODE = "123456";
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!code || !newPassword || !confirmPassword) {
             alert(t.resetPasswordFormError);
@@ -238,13 +347,19 @@ const ResetPasswordScreen = ({ onPasswordReset, onBack, t }: { onPasswordReset: 
             alert(t.alertInvalidCode);
             return;
         }
+        try {
+        await confirmPasswordReset(auth, oobCode, newPassword);
         alert(t.alertPasswordResetSuccess);
-        onPasswordReset();
+        onBack();
+        } catch (err: any) {
+        alert(err.message);
+        }
     };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4">
             <div className="w-full max-w-sm sm:max-w-md p-8 space-y-6 bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl">
+            <PigmentarAppLogoIcon className="w-24 h-24 mx-auto" />
                 <div>
                     <h1 className="text-3xl font-bold text-white">{t.resetPasswordTitle}</h1>
                     <p className="mt-2 text-sm text-neutral-400">{t.resetPasswordSubtitle}</p>
@@ -297,7 +412,6 @@ const ResetPasswordScreen = ({ onPasswordReset, onBack, t }: { onPasswordReset: 
         </div>
     );
 };
-
 
 const HomeScreen = ({ onOpenCamera, t }: { onOpenCamera: () => void, t: typeof locales.es }) => (
   <div className="flex flex-col items-center justify-center h-full p-8 text-center">
@@ -377,165 +491,149 @@ const CameraView = ({ onCapture, onBack, t }: { onCapture: (dataUrl: string) => 
     );
 };
 
-const ResultsView = ({
-    imageSrc,
-    swatches,
-    onBack,
-    onSave,
-    language,
-    t
+export const ResultsView = ({
+  imageSrc,
+  swatches,
+  onBack,
+  onSave,
+  language,
+  t
 }: {
-    imageSrc: string;
-    swatches: ColorSwatch[];
-    onBack: () => void;
-    onSave: (colors: TranslatedColor[]) => void;
-    language: Language;
-    t: typeof locales.es;
+  imageSrc: string;
+  swatches: ColorSwatch[];
+  onBack: () => void;
+  onSave: (colors: TranslatedColor[]) => void;
+  language: Language;
+  t: typeof import("./locales").locales.es;
 }) => {
-    const [selectedSwatches, setSelectedSwatches] = useState<Set<string>>(new Set());
-    const [translatedColors, setTranslatedColors] = useState<Map<string, TranslatedColor>>(new Map());
-    const [isLoading, setIsLoading] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [translatedColors, setTranslatedColors] = useState<Map<string, TranslatedColor>>(new Map());
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handleSelectSwatch = (hex: string) => {
-        setSelectedSwatches(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(hex)) {
-                newSet.delete(hex);
-            } else {
-                newSet.add(hex);
-            }
-            return newSet;
-        });
-    };
+  const toggle = (hex: string) => {
+    setSelected(s => {
+      const c = new Set(s);
+      c.has(hex) ? c.delete(hex) : c.add(hex);
+      return c;
+    });
+  };
 
-    const handleTranslate = async () => {
-        if (selectedSwatches.size === 0) {
-            alert(t.alertSelectColor);
-            return;
-        }
-
-        setIsLoading(true);
-        const newTranslations = new Map(translatedColors);
-        const swatchesToTranslate = swatches.filter(s => selectedSwatches.has(s.hex));
-
-        for (const swatch of swatchesToTranslate) {
-            if (!newTranslations.has(swatch.hex)) { // Avoid re-translating
-                const formula = await translateColorToPigments(swatch, language);
-                newTranslations.set(swatch.hex, { sourceColor: swatch, formula });
-            }
-        }
-        
-        setTranslatedColors(newTranslations);
-        setIsLoading(false);
-    };
-    
-    const handleSave = () => {
-        const colorsToSave = Array.from(translatedColors.values())
-                                .filter(tc => selectedSwatches.has(tc.sourceColor.hex));
-        if (colorsToSave.length === 0) {
-            alert(t.alertTranslateFirst);
-            return;
-        }
-        onSave(colorsToSave);
+  const handleTranslate = async () => {
+    if (!selected.size) return alert(t.alertSelectColor);
+    setIsLoading(true);
+    const copy = new Map(translatedColors);
+    for (const sw of swatches.filter(s => selected.has(s.hex))) {
+      if (!copy.has(sw.hex)) {
+        const formula = await translateColorToPigments(sw, language);
+        copy.set(sw.hex, { sourceColor: sw, formula });
+      }
     }
-    
-    const renderFormula = (formula: TranslatedColor) => (
-        <div key={formula.sourceColor.hex} className="bg-slate-800/60 p-4 rounded-lg shadow-md border border-slate-700/50">
-            <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full border-2 border-slate-600" style={{backgroundColor: formula.sourceColor.hex}}></div>
-                <h3 className="text-lg font-bold font-mono text-white tracking-wider">{formula.sourceColor.hex.toUpperCase()}</h3>
-            </div>
-            <div>
-                <h4 className="font-semibold text-lg text-amber-300 mb-3">{t.paintsToUse}</h4>
-                <ul className="text-sm text-neutral-200 space-y-2.5">
-                    {formula.formula.pigments.map((p, i) => (
-                        <li key={i} className="flex items-center gap-3">
-                            <div className="w-5 h-5 rounded-md border border-slate-500/50 shadow-inner" style={{backgroundColor: p.hex}}></div>
-                            <span className="flex-grow text-neutral-300">{p.name}</span>
-                            <span className="font-semibold text-white">{p.proportion}%</span>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-        </div>
-    );
+    setTranslatedColors(copy);
+    setIsLoading(false);
+  };
 
-    return (
-        <div className="p-4 md:p-6 max-w-7xl mx-auto">
-            <button onClick={onBack} className="flex items-center gap-2 text-orange-400 font-semibold mb-6 hover:text-orange-300 transition-colors">
-                <BackIcon className="w-5 h-5"/>
-                {t.backToCamera}
+  const handleSave = () => {
+    const arr = Array.from<TranslatedColor>(translatedColors.values());
+    if (!arr.length) return alert(t.alertTranslateFirst);
+    onSave(arr);
+  };
+
+  const formulasToShow = Array.from<TranslatedColor>(translatedColors.values())
+    .filter(tc => selected.has(tc.sourceColor.hex));
+
+  return (
+    <div className="p-4 max-w-7xl mx-auto">
+      <button onClick={onBack} className="flex items-center gap-2 text-orange-400 mb-6">
+        <BackIcon className="w-5 h-5" /> {t.backToCamera}
+      </button>
+
+      <div className="lg:grid lg:grid-cols-2 gap-6">
+        {/* IZQ: Imagen + swatches */}
+        <div className="space-y-6">
+          <img src={imageSrc} alt="Captured" className="rounded-xl shadow-lg w-full object-cover" />
+          <div className="p-4 bg-slate-900/50 border border-slate-700/80 rounded-xl">
+            <h3 className="text-2xl text-white mb-3">{t.extractedPalette}</h3>
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+              {swatches.map(s => (
+                <ColorSwatchComponent
+                  key={s.hex}
+                  swatch={s}
+                  isSelected={selected.has(s.hex)}
+                  onSelect={toggle}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* DER: Traducciones */}
+        <div className="p-4 bg-slate-900/50 border border-slate-700/80 rounded-xl flex flex-col">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-2xl text-white">{t.translationResults}</h3>
+            <button
+              onClick={handleTranslate}
+              disabled={isLoading || !selected.size}
+              className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-br from-orange-500 to-red-600 disabled:opacity-50"
+            >
+              {isLoading ? t.translatingButton : t.translateButton(selected.size)}
             </button>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left Column */}
-                <div className="flex flex-col gap-6">
-                    <img src={imageSrc} alt="Captured" className="rounded-xl shadow-2xl w-full object-cover" />
-                    <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-xl shadow-2xl p-4">
-                        <h3 className="text-2xl font-semibold text-white mb-3">{t.extractedPalette}</h3>
-                        <p className="text-sm text-neutral-400 mb-4">{t.selectColorsPrompt}</p>
-                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                            {swatches.map(swatch => (
-                                <ColorSwatchComponent
-                                    key={swatch.hex}
-                                    swatch={swatch}
-                                    isSelected={selectedSwatches.has(swatch.hex)}
-                                    onSelect={handleSelectSwatch}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </div>
+          </div>
 
-                {/* Right Column */}
-                <div className="flex flex-col gap-6">
-                    <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-xl shadow-2xl p-4 flex-grow">
-                        <div className="flex justify-between items-center mb-4">
-                             <h3 className="text-2xl font-semibold text-white">{t.translationResults}</h3>
-                             <button
-                                onClick={handleTranslate}
-                                disabled={isLoading || selectedSwatches.size === 0}
-                                className="bg-gradient-to-br from-orange-500 to-red-600 text-white font-semibold py-2 px-5 rounded-lg disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed disabled:shadow-none hover:shadow-lg hover:shadow-orange-600/20 transition-all duration-300"
-                            >
-                                {isLoading ? t.translatingButton : t.translateButton(selectedSwatches.size)}
-                            </button>
-                        </div>
-
-                        {translatedColors.size > 0 && !isLoading ? (
-                            <div className="space-y-4">
-                               {Array.from(translatedColors.values()).filter(tc => selectedSwatches.has(tc.sourceColor.hex)).map(renderFormula)}
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center gap-4 text-center text-neutral-400 py-10">
-                                {isLoading ? (
-                                    <>
-                                        <div className="relative w-12 h-12">
-                                            <div className="absolute w-full h-full rounded-full bg-orange-400 opacity-60 animate-ping"></div>
-                                            <div className="absolute w-full h-full rounded-full border-4 border-orange-500"></div>
-                                        </div>
-                                        <p className="font-semibold text-lg text-orange-300 mt-4">{t.aiIsMixing}</p>
-                                    </>
-                                ) : (
-                                  <>
-                                    <PaletteIcon className="w-16 h-16 text-slate-600"/>
-                                    <p className="max-w-xs">{t.translationPlaceholder}</p>
-                                  </>
-                                )}
-                            </div>
-                        )}
-                        
-                        {Array.from(translatedColors.values()).filter(tc => selectedSwatches.has(tc.sourceColor.hex)).length > 0 && !isLoading &&(
-                            <div className="mt-6 flex justify-end">
-                                <button onClick={handleSave} className="flex items-center gap-2 bg-gradient-to-br from-amber-500 to-yellow-600 text-white font-semibold py-2 px-4 rounded-lg hover:shadow-lg hover:shadow-amber-500/20 transition-all duration-300">
-                                    <SaveIcon className="w-5 h-5"/>
-                                    {t.saveToPalette}
-                                </button>
-                            </div>
-                        )}
-                    </div>
+          {formulasToShow.length > 0 ? (
+            <div className="space-y-4 overflow-y-auto">
+              {formulasToShow.map(fc => (
+                <div key={fc.sourceColor.hex} className="p-4 bg-slate-800/60 rounded-lg">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div
+                      className="w-10 h-10 rounded-full border"
+                      style={{ backgroundColor: fc.sourceColor.hex }}
+                    />
+                    <h3 className="font-mono text-white">{fc.sourceColor.hex.toUpperCase()}</h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {fc.formula.pigments.map((p, i) => (
+                      <li key={i} className="flex justify-between text-neutral-200">
+                        <span>{p.name}</span>
+                        <span className="font-semibold">{p.proportion}%</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
+              ))}
             </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-neutral-400">
+              {isLoading ? (
+                <>
+                  <div className="w-12 h-12 relative">
+                    <div className="absolute inset-0 rounded-full bg-orange-400 opacity-60 animate-ping" />
+                    <div className="absolute inset-0 rounded-full border-4 border-orange-500" />
+                  </div>
+                  <p className="mt-4 text-orange-300">{t.aiIsMixing}</p>
+                </>
+              ) : (
+                <>
+                  <PaletteIcon className="w-16 h-16" />
+                  <p className="mt-4">{t.translationPlaceholder}</p>
+                </>
+              )}
+            </div>
+          )}
+
+          {formulasToShow.length > 0 && !isLoading && (
+            <div className="mt-6 text-right">
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 rounded-lg bg-amber-500 font-semibold text-white inline-flex items-center gap-2"
+              >
+                <SaveIcon className="w-5 h-5" /> {t.saveToPalette}
+              </button>
+            </div>
+          )}
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 const PalettesView = ({ palettes, onAddNew, onDeletePalette, t }: {
@@ -583,59 +681,144 @@ const PalettesView = ({ palettes, onAddNew, onDeletePalette, t }: {
     </div>
 );
 
-const SettingsView = ({ onDeleteAllPalettes, onDeleteAccount, t }: {
-    onDeleteAllPalettes: () => void;
-    onDeleteAccount: () => void;
-    t: typeof locales.es;
-}) => (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto text-white">
-        <h2 className="text-4xl font-semibold mb-8">{t.settingsTitle}</h2>
-        
-        <div className="space-y-8">
-            {/* Edit Profile Card */}
-            <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-xl shadow-2xl p-6">
-                <h3 className="text-2xl font-semibold mb-4">{t.settingsProfile}</h3>
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-sm font-medium text-neutral-400">{t.settingsName}</label>
-                        <input type="text" defaultValue="Demo User" disabled className="mt-1 block w-full bg-slate-800 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white sm:text-sm cursor-not-allowed"/>
-                    </div>
-                    <button disabled className="font-semibold py-2 px-4 rounded-lg bg-slate-600 text-neutral-400 cursor-not-allowed">{t.settingsSave}</button>
-                </div>
-            </div>
+const SettingsView = ({
+  onDeleteAllPalettes,
+  onDeleteAccount,
+  t
+}: {
+  onDeleteAllPalettes: () => void;
+  onDeleteAccount: () => void;
+  t: typeof import('./locales').locales.es;
+}) => {
+  const user = auth.currentUser!;
+  // Estados para el perfil
+  const [displayName, setDisplayName] = useState(user.displayName || '');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-            {/* Change Password Card */}
-            <div className="bg-slate-900/50 backdrop-blur-md border border-slate-700/80 rounded-xl shadow-2xl p-6">
-                <h3 className="text-2xl font-semibold mb-4">{t.settingsChangePassword}</h3>
-                <div className="space-y-4">
-                     <div>
-                        <label className="text-sm font-medium text-neutral-400">{t.settingsCurrentPassword}</label>
-                        <input type="password" disabled className="mt-1 block w-full bg-slate-800 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white sm:text-sm cursor-not-allowed"/>
-                    </div>
-                     <div>
-                        <label className="text-sm font-medium text-neutral-400">{t.settingsNewPassword}</label>
-                        <input type="password" disabled className="mt-1 block w-full bg-slate-800 border border-slate-600 rounded-md shadow-sm py-2 px-3 text-white sm:text-sm cursor-not-allowed"/>
-                    </div>
-                    <button disabled className="font-semibold py-2 px-4 rounded-lg bg-slate-600 text-neutral-400 cursor-not-allowed">{t.settingsUpdatePassword}</button>
-                </div>
-            </div>
+  // Estados para la contraseña
+  const [currentPwd, setCurrentPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
+  const [isChangingPwd, setIsChangingPwd] = useState(false);
 
-            {/* Danger Zone Card */}
-            <div className="bg-slate-900/50 backdrop-blur-md border border-red-500/50 rounded-xl shadow-2xl p-6">
-                 <h3 className="text-2xl font-semibold text-red-400 mb-2">{t.settingsDangerZone}</h3>
-                 <p className="text-neutral-400 mb-6 text-sm">{t.settingsDangerZoneDesc}</p>
-                 <div className="flex flex-col sm:flex-row gap-4">
-                     <button onClick={onDeleteAllPalettes} className="font-semibold py-2 px-4 rounded-lg bg-red-800/60 text-red-300 hover:bg-red-800/90 border border-red-600/80 transition-colors flex items-center justify-center gap-2">
-                        <TrashIcon className="w-5 h-5"/> {t.settingsDeletePalettes}
-                     </button>
-                      <button onClick={onDeleteAccount} className="font-semibold py-2 px-4 rounded-lg bg-red-900 text-red-300 hover:bg-red-800 border border-red-600 transition-colors flex items-center justify-center gap-2">
-                         <TrashIcon className="w-5 h-5"/> {t.settingsDeleteAccount}
-                      </button>
-                 </div>
-            </div>
+  const handleSaveProfile = async () => {
+    try {
+      setIsSavingProfile(true);
+      await updateProfile(user, { displayName });
+      alert(t.settingsProfileSaved);
+      await user.reload();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (newPwd !== confirmPwd) {
+      return alert(t.settingsPasswordMismatch);
+    }
+    try {
+      setIsChangingPwd(true);
+      // Reautenticamos
+      const cred = EmailAuthProvider.credential(user.email!, currentPwd);
+      await reauthenticateWithCredential(user, cred);
+      // Actualizamos la contraseña
+      await updatePassword(user, newPwd);
+      alert(t.settingsPasswordChanged);
+      // Limpiamos campos
+      setCurrentPwd('');
+      setNewPwd('');
+      setConfirmPwd('');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsChangingPwd(false);
+    }
+  };
+
+  return (
+    <div className="p-4 md:p-6 max-w-3xl mx-auto text-white space-y-10">
+      {/* Perfil */}
+      <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700/80">
+        <h3 className="text-2xl font-semibold mb-4">{t.settingsProfile}</h3>
+        <label className="block text-sm text-neutral-400 mb-1">{t.settingsName}</label>
+        <input
+          type="text"
+          value={displayName}
+          onChange={e => setDisplayName(e.target.value)}
+          className="w-full mb-4 px-3 py-2 rounded-md bg-slate-800 border border-slate-600 text-white focus:ring-2 focus:ring-orange-500"
+        />
+        <button
+          onClick={handleSaveProfile}
+          disabled={isSavingProfile}
+          className="px-4 py-2 rounded-lg bg-orange-600 font-semibold"
+        >
+          {isSavingProfile ? t.settingsSaving : t.settingsSave}
+        </button>
+      </div>
+
+      {/* Cambiar contraseña */}
+      <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700/80 space-y-4">
+        <h3 className="text-2xl font-semibold mb-4">{t.settingsChangePassword}</h3>
+        <div>
+          <label className="block text-sm text-neutral-400">{t.settingsCurrentPassword}</label>
+          <input
+            type="password"
+            value={currentPwd}
+            onChange={e => setCurrentPwd(e.target.value)}
+            className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-600 text-white focus:ring-2 focus:ring-orange-500"
+          />
         </div>
+        <div>
+          <label className="block text-sm text-neutral-400">{t.settingsNewPassword}</label>
+          <input
+            type="password"
+            value={newPwd}
+            onChange={e => setNewPwd(e.target.value)}
+            className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-600 text-white focus:ring-2 focus:ring-orange-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-neutral-400">{t.settingsConfirmNewPassword}</label>
+          <input
+            type="password"
+            value={confirmPwd}
+            onChange={e => setConfirmPwd(e.target.value)}
+            className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-600 text-white focus:ring-2 focus:ring-orange-500"
+          />
+        </div>
+        <button
+          onClick={handleChangePassword}
+          disabled={isChangingPwd}
+          className="mt-2 px-4 py-2 rounded-lg bg-red-600 font-semibold"
+        >
+          {isChangingPwd ? t.settingsChangingPassword : t.settingsUpdatePassword}
+        </button>
+      </div>
+
+      {/* Zona peligrosa */}
+      <div className="bg-slate-900/50 p-6 rounded-xl border border-red-500/50 space-y-4">
+        <h3 className="text-2xl font-semibold text-red-400">{t.settingsDangerZone}</h3>
+        <p className="text-sm text-neutral-400">{t.settingsDangerZoneDesc}</p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <button
+            onClick={onDeleteAllPalettes}
+            className="flex items-center gap-2 px-4 py-2 bg-red-800/60 text-red-300 rounded-lg"
+          >
+            <TrashIcon className="w-5 h-5" /> {t.settingsDeletePalettes}
+          </button>
+          <button
+            onClick={onDeleteAccount}
+            className="flex items-center gap-2 px-4 py-2 bg-red-900 text-red-300 rounded-lg"
+          >
+            <TrashIcon className="w-5 h-5" /> {t.settingsDeleteAccount}
+          </button>
+        </div>
+      </div>
     </div>
-);
+  );
+};
 
 const UserMenu = ({ onLogout, onNavigate, t }: {
     onLogout: () => void;
@@ -706,16 +889,32 @@ const App = () => {
   const t = locales[language];
 
   useEffect(() => {
-    const savedPalettes = localStorage.getItem('pigment_palettes');
-    if (savedPalettes) {
-        setPalettes(JSON.parse(savedPalettes));
-    }
-  }, []);
+  const user = auth.currentUser;
+  if (!user) return;
+  const q = query(
+    collection(db, "users", user.uid, "palettes"),
+    orderBy("createdAt", "desc")
+  );
+  // onSnapshot se ejecuta en tiempo real
+  const unsubscribe = onSnapshot(q, snap => {
+    const list = snap.docs.map(doc => ({
+      id:       doc.id,
+      ...(doc.data() as Omit<Palette, "id">)
+    }));
+    setPalettes(list);
+  });
+  return unsubscribe;
+}, [auth.currentUser]);
   
-  const savePalettesToLocal = (updatedPalettes: Palette[]) => {
-      setPalettes(updatedPalettes);
-      localStorage.setItem('pigment_palettes', JSON.stringify(updatedPalettes));
-  }
+  async function savePaletteForUser (uid: string, palette: Palette) {
+  // crea una entrada en users/{uid}/palettes
+  const palettesCol = collection(db, "users", uid, "palettes");
+  await addDoc(palettesCol, {
+    name:      palette.name,
+    colors:    palette.colors,
+    createdAt: serverTimestamp(),
+  });
+}
 
   const handleLogout = () => {
       if(window.confirm(t.confirmLogout)) {
@@ -779,7 +978,7 @@ const App = () => {
     img.src = dataUrl;
   }, []);
 
-  const handleSaveToPalette = (colors: TranslatedColor[]) => {
+  const handleSaveToPalette = async (colors: TranslatedColor[]) => {
       const paletteName = prompt(t.promptPaletteName, t.defaultPaletteName(new Date().toLocaleDateString()));
       if (paletteName) {
           const newPalette: Palette = {
@@ -788,39 +987,72 @@ const App = () => {
               colors: colors,
               createdAt: new Date().toISOString()
           };
-          savePalettesToLocal([...palettes, newPalette]);
+          const user = auth.currentUser;
+          if (!user) return alert("Tienes que estar logueado");
+          await savePaletteForUser(user.uid, newPalette);
           alert(t.alertPaletteSaved(paletteName));
           setView(AppView.PALETTES);
       }
   };
   
-  const handleDeletePalette = (id: string) => {
-      if (window.confirm(t.confirmDeletePalette)) {
-        const updatedPalettes = palettes.filter(p => p.id !== id);
-        savePalettesToLocal(updatedPalettes);
-      }
+  const handleDeletePalette = async (id: string) => {
+  if (!auth.currentUser) return;
+  if (!window.confirm(t.confirmDeletePalette)) return;
+  await deleteDoc(doc(db, "users", auth.currentUser.uid, "palettes", id));
   };
 
-  const handleDeleteAllPalettes = () => {
-    if(window.confirm(t.confirmDeleteAllPalettes)) {
-        savePalettesToLocal([]);
-        alert(t.alertPalettesDeleted)
-    }
-  }
+  const handleDeleteAllPalettes = async () => {
+  if (!auth.currentUser) return alert("Debes iniciar sesión");
+  if (!window.confirm(t.confirmDeleteAllPalettes)) return;
 
-  const handleDeleteAccount = () => {
-    if(window.confirm(t.confirmDeleteAccount)) {
-        savePalettesToLocal([]);
-        setView(AppView.LOGIN);
-    }
+  const uid = auth.currentUser.uid;
+  const colRef = collection(db, "users", uid, "palettes");
+  const snap = await getDocs(colRef);
+
+  // Recorremos cada documento y lo borramos
+  const batchDeletes = snap.docs.map(docSnap =>
+    deleteDoc(doc(db, "users", uid, "palettes", docSnap.id))
+  );
+  await Promise.all(batchDeletes);
+
+  alert(t.alertPalettesDeleted);
+};
+
+  const handleDeleteAccount = async () => {
+  if (!auth.currentUser) return alert("Debes iniciar sesión");
+  if (!window.confirm(t.confirmDeleteAccount)) return;
+
+  const user = auth.currentUser;
+  const uid = user.uid;
+
+  try {
+    // Primero borramos todas las paletas
+    const colRef = collection(db, "users", uid, "palettes");
+    const snap = await getDocs(colRef);
+    const deletes = snap.docs.map(docSnap =>
+      deleteDoc(doc(db, "users", uid, "palettes", docSnap.id))
+    );
+    await Promise.all(deletes);
+
+    // (Opcional) borrar perfil del usuario en Firestore:
+    await deleteDoc(doc(db, "users", uid));
+
+    // Luego eliminar la cuenta de Firebase Auth
+    await deleteUser(user);
+
+    alert("Cuenta y datos eliminados correctamente.");
+    setView(AppView.LOGIN);
+  } catch (err: any) {
+    alert("Error al eliminar cuenta: " + err.message);
   }
+};
 
   const renderContent = () => {
     switch (view) {
       case AppView.LOGIN:
-        return <LoginScreen onNavigate={setView} t={t}/>;
+        return <LoginScreen onNavigate={setView} t={t} language={language} />;
       case AppView.CREATE_ACCOUNT:
-        return <CreateAccountScreen onNavigate={setView} t={t}/>;
+        return <CreateAccountScreen onNavigate={setView} t={t} language={language} />;
       case AppView.FORGOT_PASSWORD:
         return <ForgotPasswordScreen onNavigate={setView} onSendCode={handleRequestPasswordReset} t={t}/>;
       case AppView.RESET_PASSWORD:
@@ -839,7 +1071,7 @@ const App = () => {
       case AppView.SETTINGS:
           return <SettingsView onDeleteAllPalettes={handleDeleteAllPalettes} onDeleteAccount={handleDeleteAccount} t={t}/>;
       default:
-        return <LoginScreen onNavigate={setView} t={t}/>;
+        return <LoginScreen onNavigate={setView} t={t} language={language} />;
     }
   };
   

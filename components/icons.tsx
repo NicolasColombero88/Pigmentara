@@ -3,24 +3,57 @@ import React from 'react';
 
 // A logo representing a fan of color swatches, fitting the app's purpose of color palette creation.
 export const PigmentarAppLogoIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <g transform="translate(12 52) scale(1.1)">
-        <g transform="rotate(-30 0 0)">
-          <rect width="36" height="52" rx="4" fill="#DC2626"/>
-        </g>
-        <g transform="rotate(-10 0 0)">
-          <rect width="36" height="52" rx="4" fill="#F97316"/>
-        </g>
-        <g transform="rotate(10 0 0)">
-          <rect width="36" height="52" rx="4" fill="#FB923C"/>
-        </g>
-         <g transform="rotate(30 0 0)">
-          <rect width="36" height="52" rx="4" fill="#FBBF24"/>
-        </g>
-      </g>
-      <circle cx="12" cy="52" r="6" fill="#1E293B"/>
-      <circle cx="12" cy="52" r="2.5" fill="#475569"/>
-    </svg>
+    <svg
+    {...props}
+    id="PigmentarAppLogoIcon"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 64 64"
+  >
+    <g>
+      <rect
+        fill="#dc2626"
+        x="12.74"
+        y="4.18"
+        width="25.68"
+        height="37.1"
+        rx="4.4"
+        ry="4.4"
+        transform="translate(18.69 56.24) rotate(-120)"
+      />
+      <rect
+        fill="#f97316"
+        x="19.13"
+        y="8.7"
+        width="25.68"
+        height="37.1"
+        rx="4.4"
+        ry="4.4"
+        transform="translate(10.69 63.47) rotate(-100)"
+      />
+      <rect
+        fill="#fb923c"
+        x="17.88"
+        y="20.85"
+        width="37.1"
+        height="25.68"
+        rx="4.4"
+        ry="4.4"
+        transform="translate(66.46 73.21) rotate(-170)"
+      />
+      <rect
+        fill="#fbbf24"
+        x="19.87"
+        y="28.43"
+        width="37.1"
+        height="25.68"
+        rx="4.4"
+        ry="4.4"
+        transform="translate(51.06 96.23) rotate(-150)"
+      />
+    </g>
+    <circle fill="#1e293b" cx="15.94" cy="43.12" r="3.89" />
+    <circle fill="#475569" cx="15.94" cy="43.12" r="1.62" />
+  </svg>
 );
 
 

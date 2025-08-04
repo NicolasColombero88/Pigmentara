@@ -10,6 +10,8 @@ export const locales = {
     loginForgotPassword: "¿Olvidaste tu contraseña?",
     loginButtonAction: "Ingresar",
     loginFormError: "Por favor, ingresa tu correo y contraseña.",
+    loginWithGoogle: "Iniciar con Google",
+    forgotPasswordFormError: "Por favor ingresa un correo electrónico",
 
     // Create Account
     createAccountTitle: "Crear Nueva Cuenta",
@@ -42,6 +44,13 @@ export const locales = {
     alertInvalidCode: "El código de recuperación es incorrecto.",
     alertPasswordResetSuccess: "¡Contraseña actualizada con éxito! Ahora puedes iniciar sesión.",
     resetPasswordFormError: "Por favor, completa todos los campos.",
+
+    //AuthMessages
+    authInvalidEmail:           'El formato del correo es inválido.',
+    authInvalidCredentials:     'Email o contraseña incorrectos.',
+    authOperationNotAllowed:    'Método de autenticación no permitido.',
+    authTooManyRequests:        'Demasiados intentos. Intenta de nuevo más tarde.',
+    authUnexpectedError:        (code: string) => `Se produjo un error inesperado: ${code}`,
 
     // Home
     homeTitle: "Comenzar una Nueva Paleta",
@@ -99,6 +108,12 @@ export const locales = {
     confirmDeleteAllPalettes: "¡ADVERTENCIA! ¿Estás seguro de que quieres borrar TODAS tus paletas? Esta acción no se puede deshacer.",
     alertPalettesDeleted: "Todas tus paletas han sido borradas.",
     confirmDeleteAccount: "¡ADVERTENCIA FINAL! ¿Estás seguro de que quieres borrar tu cuenta y todas tus paletas? Esta acción no se puede deshacer.",
+    settingsProfileSaved: "Perfil actualizado correctamente",
+    settingsPasswordMismatch:       "Las contraseñas no coinciden.",
+    settingsPasswordChanged:        "La contraseña se ha cambiado correctamente.",
+    settingsSaving:                 "Guardando…",
+    settingsConfirmNewPassword:     "Confirmar nueva contraseña",
+    settingsChangingPassword:       "Cambiando contraseña…",
 
     // Footer
     footerText: "Un desarrollo de",
@@ -152,6 +167,13 @@ export const locales = {
     alertInvalidCode: "The recovery code is incorrect.",
     alertPasswordResetSuccess: "Password successfully updated! You can now log in.",
     resetPasswordFormError: "Please fill out all fields.",
+
+    //AuthMessages
+    authInvalidEmail:           'Invalid email format.',
+    authInvalidCredentials:     'Email or password is incorrect.',
+    authOperationNotAllowed:    'Authentication method not allowed.',
+    authTooManyRequests:        'Too many attempts. Try again later.',
+    authUnexpectedError:        (code: string) => `Unexpected error: ${code}`,
 
     // Home
     homeTitle: "Start a New Palette",
@@ -209,6 +231,12 @@ export const locales = {
     confirmDeleteAllPalettes: "WARNING! Are you sure you want to delete ALL of your palettes? This action cannot be undone.",
     alertPalettesDeleted: "All your palettes have been deleted.",
     confirmDeleteAccount: "FINAL WARNING! Are you sure you want to delete your account and all your data? This action cannot be undone.",
+    settingsProfileSaved: "Profile updated successfully",
+    settingsPasswordMismatch:       "Passwords do not match.",
+    settingsPasswordChanged:        "Password changed successfully.",
+    settingsSaving:                 "Saving…",
+    settingsConfirmNewPassword:     "Confirm new password",
+    settingsChangingPassword:       "Changing password…",
 
     // Footer
     footerText: "A development by",
